@@ -724,20 +724,9 @@ async function loadAll() {
   } else {
     loadFromFallback();
   }
-  // If still no data, try fetch from HTTP
   if (!gastosData.length) {
-    try {
-      const [gRes, hRes] = await Promise.all([
-        fetch('gastos.csv?t=' + Date.now()),
-        fetch('horas.csv?t=' + Date.now())
-      ]);
-      if (gRes.ok) gastosData = parseGastos(await gRes.text());
-      if (hRes.ok) horasData = parseHoras(await hRes.text());
-      refreshAll();
-    } catch (e) {
-      document.getElementById('g-table-body').innerHTML =
-        `<tr><td colspan="8" class="empty-state"><p>No se pudieron cargar los datos. Conecta la carpeta o arrastra los CSVs.</p></td></tr>`;
-    }
+    document.getElementById('g-table-body').innerHTML =
+      `<tr><td colspan="8" class="empty-state"><p>Selecciona la carpeta con tus CSVs pulsando "📁 Abrir carpeta scan"</p></td></tr>`;
   }
 }
 
