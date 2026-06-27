@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partida de Gastos — Carbon Moto</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #232733;
+    --border: #2e3345;
+    --text: #e4e6f0;
+    --text-dim: #8b8fa3;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --purple: #a855f7;
+    --radius: 8px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+  h1 span { color: var(--accent); }
+  .subtitle { color: var(--text-dim); font-size: 0.875rem; margin-top: 0.25rem; }
+
+  .actions { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+
+  .btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .btn:hover { background: var(--surface2); border-color: var(--accent); }
+  .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-save { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn-save:hover { background: #16a34a; }
+
+  .unsaved-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--yellow);
+    display: none; margin-left: 0.3rem;
+  }
+  .unsaved-dot.visible { display: inline-block; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 0.75rem 1.5rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-dim);
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    background: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Stats */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+  }
+  .stat-label {
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    margin-bottom: 0.35rem;
+  }
+  .stat-value { font-size: 1.35rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.yellow { color: var(--yellow); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.purple { color: var(--purple); }
+
+  /* Filters */
+  .filters {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 0.25rem; }
+  .filter-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); }
+
+  select, input[type="text"], input[type="date"], input[type="number"] {
+    padding: 0.45rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 0.8125rem;
+    min-width: 140px;
+  }
+  select:focus, input:focus { outline: none; border-color: var(--accent); }
+
+  /* Tables */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+  thead th {
+    background: var(--surface2);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  thead th:hover { color: var(--text); }
+  thead th .sort-arrow { margin-left: 0.3rem; font-size: 0.625rem; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody tr:last-child { border-bottom: none; }
+  td { padding: 0.65rem 1rem; white-space: nowrap; }
+  td.amount { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; }
+
+  .badge {
+    display: inline-block;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .badge-pagado, .badge-facturado { background: rgba(34,197,94,0.15); color: var(--green); }
+  .badge-pendiente { background: rgba(234,179,8,0.15); color: var(--yellow); }
+  .badge-parcial { background: rgba(239,68,68,0.15); color: var(--red); }
+
+  .cat-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.6875rem;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+  }
+
+  .empty-state { text-align: center; padding: 3rem; color: var(--text-dim); }
+  .empty-state p { margin-top: 0.5rem; font-size: 0.875rem; }
+  .footer { margin-top: 1.5rem; text-align: center; color: var(--text-dim); font-size: 0.75rem; }
+
+  /* Action buttons */
+  .actions-cell { display: flex; gap: 0.3rem; }
+  .btn-icon {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface2);
+    color: var(--text-dim);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+    padding: 0;
+  }
+  .btn-icon:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
+  .btn-icon.danger:hover { border-color: var(--red); color: var(--red); }
+  .btn-icon svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Summary panel */
+  .summary-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-top: 2rem;
+  }
+  .summary-panel h3 { font-size: 1rem; margin-bottom: 1rem; color: var(--accent); }
+  .summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .summary-item { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+  .summary-item:last-child { border-bottom: none; }
+  .summary-item .label { color: var(--text-dim); font-size: 0.8125rem; }
+  .summary-item .value { font-weight: 600; font-variant-numeric: tabular-nums; }
+
+  /* Modal */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal h2 { font-size: 1.125rem; margin-bottom: 1rem; }
+  .form-group { margin-bottom: 0.85rem; }
+  .form-group label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    margin-bottom: 0.3rem;
+  }
+  .form-group input, .form-group select { width: 100%; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .modal-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1.25rem; }
+
+  @media (max-width: 640px) {
+    body { padding: 1rem; }
+    .header { flex-direction: column; }
+    .filters { flex-direction: column; }
+    .filter-group { width: 100%; }
+    select, input { min-width: auto; width: 100%; }
+    td, th { padding: 0.5rem 0.6rem; }
+    .tabs { overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Partida de <span>Gastos</span></h1>
+    <div class="subtitle">Carbon Moto — Piezas aftermarket fibra de carbono</div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="btn-folder" onclick="pickDirectory()">📁 Abrir carpeta scan</button>
+    <span id="folder-status" style="font-size:0.75rem;color:var(--yellow);display:none"></span>
+    <button class="btn" onclick="openAddModal('gasto')">+ Gasto</button>
+    <button class="btn" onclick="openAddModal('hora')">+ Hora</button>
+    <button class="btn" onclick="exportAll()">↓ Exportar como copia</button>
+  </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('gastos')">Gastos materiales</button>
+  <button class="tab" onclick="switchTab('horas')">Horas de trabajo</button>
+  <button class="tab" onclick="switchTab('resumen')">Resumen</button>
+</div>
+
+<!-- TAB: GASTOS -->
+<div class="tab-content active" id="tab-gastos">
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total gastos</div>
+      <div class="stat-value" id="g-stat-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pagado</div>
+      <div class="stat-value green" id="g-stat-pagado">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pendiente</div>
+      <div class="stat-value yellow" id="g-stat-pendiente">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Nº registros</div>
+      <div class="stat-value" id="g-stat-count">—</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Buscar</span>
+      <input type="text" id="g-filter-search" placeholder="Concepto, proveedor..." oninput="applyGastosFilters()">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Categoría</span>
+      <select id="g-filter-cat" onchange="applyGastosFilters()"><option value="">Todas</option></select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Estado</span>
+      <select id="g-filter-estado" onchange="applyGastosFilters()">
+        <option value="">Todos</option>
+        <option value="Pagado">Pagado</option>
+        <option value="Pendiente">Pendiente</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="gSortBy('fecha')">Fecha <span class="sort-arrow" id="g-sort-fecha"></span></th>
+          <th onclick="gSortBy('concepto')">Concepto <span class="sort-arrow" id="g-sort-concepto"></span></th>
+          <th onclick="gSortBy('importe')">Importe <span class="sort-arrow" id="g-sort-importe"></span></th>
+          <th onclick="gSortBy('categoria')">Categoría <span class="sort-arrow" id="g-sort-categoria"></span></th>
+          <th onclick="gSortBy('proveedor')">Proveedor <span class="sort-arrow" id="g-sort-proveedor"></span></th>
+          <th onclick="gSortBy('estado')">Estado <span class="sort-arrow" id="g-sort-estado"></span></th>
+          <th onclick="gSortBy('factura')">Nº Factura <span class="sort-arrow" id="g-sort-factura"></span></th>
+          <th style="cursor:default">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="g-table-body"></tbody>
+    </table>
+  </div>
+  <div class="footer" id="g-footer-info"></div>
+</div>
+
+<!-- TAB: HORAS -->
+<div class="tab-content" id="tab-horas">
+  <div class="stats" style="margin-bottom:0.5rem">
+    <div class="stat-card">
+      <div class="stat-label">Total horas</div>
+      <div class="stat-value purple" id="h-stat-total-h">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total facturado</div>
+      <div class="stat-value" id="h-stat-total">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Facturado</div>
+      <div class="stat-value green" id="h-stat-facturado">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Pendiente</div>
+      <div class="stat-value yellow" id="h-stat-pendiente">—</div>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap">
+    <button class="btn" onclick="setAllTarifas(10)">10€/h en todas</button>
+    <button class="btn" onclick="setAllTarifas(25)">25€/h en todas</button>
+    <span style="font-size:0.75rem;color:var(--text-dim);align-self:center">(actualiza tarifa y total)</span>
+  </div>
+
+  <div class="filters">
+    <div class="filter-group">
+      <span class="filter-label">Buscar</span>
+      <input type="text" id="h-filter-search" placeholder="Tarea..." oninput="applyHorasFilters()">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Tipo</span>
+      <select id="h-filter-tipo" onchange="applyHorasFilters()"><option value="">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Estado</span>
+      <select id="h-filter-estado" onchange="applyHorasFilters()">
+        <option value="">Todos</option>
+        <option value="Facturado">Facturado</option>
+        <option value="Pendiente">Pendiente</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="hSortBy('fecha')">Fecha <span class="sort-arrow" id="h-sort-fecha"></span></th>
+          <th onclick="hSortBy('tipo')">Tipo <span class="sort-arrow" id="h-sort-tipo"></span></th>
+          <th onclick="hSortBy('tarea')">Tarea <span class="sort-arrow" id="h-sort-tarea"></span></th>
+          <th onclick="hSortBy('horas')">Horas <span class="sort-arrow" id="h-sort-horas"></span></th>
+          <th onclick="hSortBy('tarifa')">Tarifa/h <span class="sort-arrow" id="h-sort-tarifa"></span></th>
+          <th onclick="hSortBy('total')">Total <span class="sort-arrow" id="h-sort-total"></span></th>
+          <th onclick="hSortBy('estado')">Estado <span class="sort-arrow" id="h-sort-estado"></span></th>
+          <th style="cursor:default">Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="h-table-body"></tbody>
+    </table>
+  </div>
+  <div class="footer" id="h-footer-info"></div>
+</div>
+
+<!-- TAB: RESUMEN -->
+<div class="tab-content" id="tab-resumen">
+  <div class="summary-panel">
+    <h3>Resumen del proyecto</h3>
+    <div class="summary-grid">
+      <div>
+        <div class="summary-item"><span class="label">Gastos materiales</span><span class="value" id="r-gastos">—</span></div>
+        <div class="summary-item"><span class="label">Horas de trabajo</span><span class="value" id="r-horas">—</span></div>
+        <div class="summary-item"><span class="label">Coste total</span><span class="value" id="r-total" style="color:var(--accent);font-size:1.1rem;">—</span></div>
+      </div>
+      <div>
+        <div class="summary-item"><span class="label">Gastos pagados</span><span class="value" style="color:var(--green)" id="r-gpagado">—</span></div>
+        <div class="summary-item"><span class="label">Gastos pendientes</span><span class="value" style="color:var(--yellow)" id="r-gpendiente">—</span></div>
+        <div class="summary-item"><span class="label">Horas pendientes</span><span class="value" style="color:var(--yellow)" id="r-hpendiente">—</span></div>
+      </div>
+      <div>
+        <div class="summary-item"><span class="label">Horas Diseño Web</span><span class="value" id="r-h-web">—</span></div>
+        <div class="summary-item"><span class="label">Horas 3D</span><span class="value" id="r-h-3d">—</span></div>
+        <div class="summary-item"><span class="label">Horas Fabricación</span><span class="value" id="r-h-fab">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL AÑADIR -->
+<div class="modal-overlay" id="modal-add">
+  <div class="modal">
+    <h2 id="modal-title">Añadir</h2>
+
+    <!-- Form Gasto -->
+    <div id="form-gasto">
+      <div class="form-row">
+        <div class="form-group"><label>Fecha</label><input type="date" id="add-fecha"></div>
+        <div class="form-group"><label>Importe (€)</label><input type="text" id="add-importe" placeholder="0.00"></div>
+      </div>
+      <div class="form-group"><label>Concepto</label><input type="text" id="add-concepto" placeholder="Descripción del gasto"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Categoría</label><select id="add-categoria"></select></div>
+        <div class="form-group"><label>Estado</label><select id="add-estado-g"><option>Pagado</option><option>Pendiente</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Proveedor</label><input type="text" id="add-proveedor" placeholder="Nombre proveedor"></div>
+        <div class="form-group"><label>Nº Factura</label><input type="text" id="add-factura" placeholder="INV-XXXX-XXX"></div>
+      </div>
+    </div>
+
+    <!-- Form Hora -->
+    <div id="form-hora" style="display:none">
+      <div class="form-row">
+        <div class="form-group"><label>Fecha</label><input type="date" id="add-h-fecha"></div>
+        <div class="form-group"><label>Tipo</label><select id="add-h-tipo"><option>Diseño Web</option><option>3D</option><option>Fabricación</option></select></div>
+      </div>
+      <div class="form-group"><label>Tarea</label><input type="text" id="add-h-tarea" placeholder="Descripción de la tarea"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Horas</label><input type="number" id="add-h-horas" min="0.5" step="0.5" value="1"></div>
+        <div class="form-group"><label>Tarifa/h (€)</label><input type="number" id="add-h-tarifa" step="0.5" value="25"></div>
+      </div>
+      <div class="form-group"><label>Estado</label><select id="add-h-estado"><option>Facturado</option><option>Pendiente</option></select></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn" onclick="closeAddModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="addEntry()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIAS_GASTOS = [
+  'Scanner 3D / Software',
+  'Fibra de Carbono / Resinas',
+  'Herramientas / Molds',
+  'Hosting / Ecommerce',
+  'Marketing / Fotos',
+  'Logística / Envíos',
+  'Maquinaria',
+  'Formación',
+  'Seguros / Legal',
+  'Otros'
+];
+
+let gastosData = [], gastosFiltered = [];
+let horasData = [], horasFiltered = [];
+let gSortCol = 'fecha', gSortDir = 'desc';
+let hSortCol = 'fecha', hSortDir = 'desc';
+let currentModalType = 'gasto';
+let editingType = null;
+let editingIndex = -1;
+let dirHandle = null;
+
+// ── INDEXED DB (para guardar el manejador de la carpeta) ──
+
+function idb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open('CarbonMotoDB', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('store');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbGet(key) {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('store', 'readonly');
+    const req = tx.objectStore('store').get(key);
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function idbSet(key, val) {
+  const db = await idb();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction('store', 'readwrite');
+    const req = tx.objectStore('store').put(val, key);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ── FILE SYSTEM ACCESS API ──
+
+const FS_AVAIL = 'showDirectoryPicker' in window;
+
+function updateFolderStatus(msg) {
+  const el = document.getElementById('folder-status');
+  el.textContent = msg;
+  el.style.display = msg ? 'inline' : 'none';
+}
+
+async function initDirectory() {
+  if (!FS_AVAIL) {
+    document.getElementById('btn-folder').textContent = '⚠ Safari no soporta escritura directa';
+    document.getElementById('btn-folder').disabled = true;
+    loadFromFallback();
+    return;
+  }
+  try {
+    const stored = await idbGet('dirHandle');
+    if (stored) {
+      dirHandle = stored;
+      if (await dirHandle.queryPermission({mode: 'readwrite'}) !== 'granted') {
+        if (await dirHandle.requestPermission({mode: 'readwrite'}) !== 'granted') {
+          dirHandle = null;
+        }
+      }
+      if (dirHandle) {
+        updateFolderStatus('✅ Carpeta conectada');
+        await loadFromDirectory();
+        return;
+      }
+    }
+  } catch (e) {
+    dirHandle = null;
+  }
+  updateFolderStatus('⚠ Pulsa "📁 Abrir carpeta scan"');
+  loadFromFallback();
+}
+
+async function pickDirectory() {
+  try {
+    dirHandle = await window.showDirectoryPicker({mode: 'readwrite'});
+    await idbSet('dirHandle', dirHandle);
+    updateFolderStatus('✅ Carpeta conectada');
+    await loadFromDirectory();
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      updateFolderStatus('Error: ' + e.message);
+    }
+  }
+}
+
+async function loadFromDirectory() {
+  try {
+    const gFile = await dirHandle.getFileHandle('gastos.csv');
+    const hFile = await dirHandle.getFileHandle('horas.csv');
+    gastosData = parseGastos(await (await gFile.getFile()).text());
+    horasData = parseHoras(await (await hFile.getFile()).text());
+    refreshAll();
+  } catch (e) {
+    updateFolderStatus('Error leyendo CSVs: ' + e.message);
+  }
+}
+
+async function saveToDisk() {
+  if (!dirHandle) {
+    updateFolderStatus('⚠ Selecciona la carpeta primero');
+    return;
+  }
+  try {
+    await writeFile('gastos.csv', toCSV('gasto'));
+    await writeFile('horas.csv', toCSV('hora'));
+    updateFolderStatus('✅ Guardado en disco');
+    setTimeout(() => updateFolderStatus('✅ Carpeta conectada'), 2000);
+  } catch (e) {
+    updateFolderStatus('Error al guardar: ' + e.message);
+  }
+}
+
+async function writeFile(name, content) {
+  const fh = await dirHandle.getFileHandle(name, {create: true});
+  const w = await fh.createWritable();
+  await w.write(content);
+  await w.close();
+}
+
+// ── FALLBACK (localStorage si no hay API) ──
+
+function saveToFallback() {
+  localStorage.setItem('carbonmoto_gastos', JSON.stringify(gastosData));
+  localStorage.setItem('carbonmoto_horas', JSON.stringify(horasData));
+}
+
+function loadFromFallback() {
+  const g = localStorage.getItem('carbonmoto_gastos');
+  const h = localStorage.getItem('carbonmoto_horas');
+  if (g) gastosData = JSON.parse(g);
+  if (h) horasData = JSON.parse(h);
+  if (g || h) refreshAll();
+}
+
+// ── CSV ──
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  const headers = lines[0].split(',').map(h => h.trim());
+  return lines.slice(1).map(line => {
+    const vals = [];
+    let current = '';
+    let inQuotes = false;
+    for (let ch of line) {
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { vals.push(current.trim()); current = ''; }
+      else { current += ch; }
+    }
+    vals.push(current.trim());
+    const obj = {};
+    headers.forEach((h, i) => obj[h.toLowerCase().replace(/ /g,'_')] = vals[i] || '');
+    return obj;
+  });
+}
+
+function parseGastos(text) {
+  return parseCSV(text).map(r => ({
+    fecha: r.fecha || '',
+    concepto: r.concepto || '',
+    importe: parseFloat((r.importe || '0').replace(',','.')) || 0,
+    categoria: r.categoria || '',
+    proveedor: r.proveedor || '',
+    estado: r.estado || '',
+    factura: r['nº_factura'] || r['nº factura'] || r.factura || ''
+  }));
+}
+
+function parseHoras(text) {
+  return parseCSV(text).map(r => ({
+    fecha: r.fecha || '',
+    tipo: r.tipo || '',
+    tarea: r.tarea || '',
+    horas: parseFloat((r.horas || '0').replace(',','.')) || 0,
+    tarifa: parseFloat((r.tarifa_hora || r['tarifa/hora'] || r.tarifa || '0').replace(',','.')) || 0,
+    total: parseFloat((r.total || '0').replace(',','.')) || 0,
+    estado: r.estado || ''
+  }));
+}
+
+function toCSV(type) {
+  let header, rows;
+  if (type === 'gasto') {
+    header = 'Fecha,Concepto,Importe,Categoria,Proveedor,Estado,Nº Factura';
+    rows = gastosData.map(d => `${d.fecha},"${d.concepto}",${d.importe.toFixed(2)},"${d.categoria}","${d.proveedor}",${d.estado},"${d.factura}"`).join('\n');
+  } else {
+    header = 'Fecha,Tipo,Tarea,Horas,Tarifa/Hora,Total,Estado';
+    rows = horasData.map(d => `${d.fecha},${d.tipo},"${d.tarea}",${d.horas},${d.tarifa.toFixed(2)},${d.total.toFixed(2)},${d.estado}`).join('\n');
+  }
+  return header + '\n' + rows;
+}
+
+// ── INIT ──
+
+async function loadAll() {
+  if (FS_AVAIL) {
+    await initDirectory();
+  } else {
+    loadFromFallback();
+  }
+  // If still no data, try fetch from HTTP
+  if (!gastosData.length) {
+    try {
+      const [gRes, hRes] = await Promise.all([
+        fetch('gastos.csv?t=' + Date.now()),
+        fetch('horas.csv?t=' + Date.now())
+      ]);
+      if (gRes.ok) gastosData = parseGastos(await gRes.text());
+      if (hRes.ok) horasData = parseHoras(await hRes.text());
+      refreshAll();
+    } catch (e) {
+      document.getElementById('g-table-body').innerHTML =
+        `<tr><td colspan="8" class="empty-state"><p>No se pudieron cargar los datos. Conecta la carpeta o arrastra los CSVs.</p></td></tr>`;
+    }
+  }
+}
+
+function refreshAll() {
+  populateGastosFilters();
+  populateHorasFilters();
+  applyGastosFilters();
+  applyHorasFilters();
+  renderSummary();
+}
+
+function persist() {
+  if (dirHandle) {
+    saveToDisk();
+  } else {
+    saveToFallback();
+  }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab[onclick="switchTab('${tab}')"]`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+}
+
+// ── GASTOS ──
+
+function populateGastosFilters() {
+  const cats = [...new Set(gastosData.map(d => d.categoria).filter(Boolean))].sort();
+  document.getElementById('g-filter-cat').innerHTML = '<option value="">Todas</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+  document.getElementById('add-categoria').innerHTML = CATEGORIAS_GASTOS.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function applyGastosFilters() {
+  const search = document.getElementById('g-filter-search').value.toLowerCase();
+  const cat = document.getElementById('g-filter-cat').value;
+  const estado = document.getElementById('g-filter-estado').value;
+  gastosFiltered = gastosData.filter(d => {
+    if (search && !(d.concepto.toLowerCase().includes(search) || d.proveedor.toLowerCase().includes(search) || d.factura.toLowerCase().includes(search))) return false;
+    if (cat && d.categoria !== cat) return false;
+    if (estado && d.estado !== estado) return false;
+    return true;
+  });
+  gSortData(); renderGastosTable(); renderGastosStats();
+}
+
+function gSortBy(col) {
+  if (gSortCol === col) gSortDir = gSortDir === 'asc' ? 'desc' : 'asc';
+  else { gSortCol = col; gSortDir = col === 'fecha' || col === 'importe' ? 'desc' : 'asc'; }
+  document.querySelectorAll('[id^="g-sort-"]').forEach(el => el.textContent = '');
+  document.getElementById('g-sort-' + col).textContent = gSortDir === 'asc' ? '▲' : '▼';
+  gSortData(); renderGastosTable();
+}
+
+function gSortData() {
+  gastosFiltered.sort((a, b) => {
+    let va = a[gSortCol], vb = b[gSortCol];
+    if (gSortCol === 'importe') { va = Number(va); vb = Number(vb); }
+    return va < vb ? (gSortDir === 'asc' ? -1 : 1) : va > vb ? (gSortDir === 'asc' ? 1 : -1) : 0;
+  });
+}
+
+function fmt(n) { return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n); }
+
+function badgeEstado(estado) {
+  const cls = estado === 'Pagado' || estado === 'Facturado' ? 'badge-pagado' : estado === 'Pendiente' ? 'badge-pendiente' : 'badge-parcial';
+  return `<span class="badge ${cls}">${estado}</span>`;
+}
+
+function renderGastosTable() {
+  const tbody = document.getElementById('g-table-body');
+  if (!gastosFiltered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><p>No hay gastos</p></td></tr>`;
+  } else {
+    tbody.innerHTML = gastosFiltered.map(d => {
+      const realIdx = gastosData.indexOf(d);
+      return `<tr>
+        <td>${d.fecha}</td>
+        <td>${d.concepto}</td>
+        <td class="amount">${fmt(d.importe)}</td>
+        <td><span class="cat-badge">${d.categoria}</span></td>
+        <td>${d.proveedor}</td>
+        <td>${badgeEstado(d.estado)}</td>
+        <td>${d.factura}</td>
+        <td><div class="actions-cell">
+          <button class="btn-icon" title="Editar" onclick="editGasto(${realIdx})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="btn-icon danger" title="Borrar" onclick="deleteGasto(${realIdx})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('g-footer-info').textContent = `${gastosFiltered.length} de ${gastosData.length} registros`;
+}
+
+function renderGastosStats() {
+  const total = gastosFiltered.reduce((s, d) => s + d.importe, 0);
+  const pagado = gastosFiltered.filter(d => d.estado === 'Pagado').reduce((s, d) => s + d.importe, 0);
+  document.getElementById('g-stat-total').textContent = fmt(total);
+  document.getElementById('g-stat-pagado').textContent = fmt(pagado);
+  document.getElementById('g-stat-pendiente').textContent = fmt(total - pagado);
+  document.getElementById('g-stat-count').textContent = gastosFiltered.length;
+}
+
+// ── HORAS ──
+
+function populateHorasFilters() {
+  const tipos = [...new Set(horasData.map(d => d.tipo).filter(Boolean))].sort();
+  document.getElementById('h-filter-tipo').innerHTML = '<option value="">Todos</option>' + tipos.map(t => `<option value="${t}">${t}</option>`).join('');
+}
+
+function applyHorasFilters() {
+  const search = document.getElementById('h-filter-search').value.toLowerCase();
+  const tipo = document.getElementById('h-filter-tipo').value;
+  const estado = document.getElementById('h-filter-estado').value;
+  horasFiltered = horasData.filter(d => {
+    if (search && !d.tarea.toLowerCase().includes(search)) return false;
+    if (tipo && d.tipo !== tipo) return false;
+    if (estado && d.estado !== estado) return false;
+    return true;
+  });
+  hSortData(); renderHorasTable(); renderHorasStats();
+}
+
+function hSortBy(col) {
+  if (hSortCol === col) hSortDir = hSortDir === 'asc' ? 'desc' : 'asc';
+  else { hSortCol = col; hSortDir = col === 'fecha' || col === 'total' || col === 'horas' ? 'desc' : 'asc'; }
+  document.querySelectorAll('[id^="h-sort-"]').forEach(el => el.textContent = '');
+  document.getElementById('h-sort-' + col).textContent = hSortDir === 'asc' ? '▲' : '▼';
+  hSortData(); renderHorasTable();
+}
+
+function hSortData() {
+  horasFiltered.sort((a, b) => {
+    let va = a[hSortCol], vb = b[hSortCol];
+    if (['horas','tarifa','total'].includes(hSortCol)) { va = Number(va); vb = Number(vb); }
+    return va < vb ? (hSortDir === 'asc' ? -1 : 1) : va > vb ? (hSortDir === 'asc' ? 1 : -1) : 0;
+  });
+}
+
+function renderHorasTable() {
+  const tbody = document.getElementById('h-table-body');
+  if (!horasFiltered.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state"><p>No hay horas registradas</p></td></tr>`;
+  } else {
+    tbody.innerHTML = horasFiltered.map(d => {
+      const realIdx = horasData.indexOf(d);
+      return `<tr>
+        <td>${d.fecha}</td>
+        <td><span class="cat-badge">${d.tipo}</span></td>
+        <td>${d.tarea}</td>
+        <td class="amount">${d.horas}h</td>
+        <td class="amount">${fmt(d.tarifa)}</td>
+        <td class="amount">${fmt(d.total)}</td>
+        <td>${badgeEstado(d.estado)}</td>
+        <td><div class="actions-cell">
+          <button class="btn-icon" title="Editar" onclick="editHora(${realIdx})"><svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+          <button class="btn-icon danger" title="Borrar" onclick="deleteHora(${realIdx})"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        </div></td>
+      </tr>`;
+    }).join('');
+  }
+  document.getElementById('h-footer-info').textContent = `${horasFiltered.length} de ${horasData.length} registros`;
+}
+
+function renderHorasStats() {
+  const totalH = horasFiltered.reduce((s, d) => s + d.horas, 0);
+  const totalEur = horasFiltered.reduce((s, d) => s + d.total, 0);
+  const facturado = horasFiltered.filter(d => d.estado === 'Facturado').reduce((s, d) => s + d.total, 0);
+  document.getElementById('h-stat-total-h').textContent = totalH.toFixed(1) + 'h';
+  document.getElementById('h-stat-total').textContent = fmt(totalEur);
+  document.getElementById('h-stat-facturado').textContent = fmt(facturado);
+  document.getElementById('h-stat-pendiente').textContent = fmt(totalEur - facturado);
+}
+
+function setAllTarifas(tarifa) {
+  if (!confirm(`¿Poner ${tarifa}€/h en TODAS las horas?`)) return;
+  horasData.forEach(d => { d.tarifa = tarifa; d.total = d.horas * tarifa; });
+  persist();
+  applyHorasFilters();
+  renderSummary();
+}
+
+// ── RESUMEN ──
+
+function renderSummary() {
+  const gTotal = gastosData.reduce((s, d) => s + d.importe, 0);
+  const gPagado = gastosData.filter(d => d.estado === 'Pagado').reduce((s, d) => s + d.importe, 0);
+  const hTotal = horasData.reduce((s, d) => s + d.total, 0);
+  const hPendiente = horasData.filter(d => d.estado === 'Pendiente').reduce((s, d) => s + d.total, 0);
+  const hWeb = horasData.filter(d => d.tipo === 'Diseño Web').reduce((s, d) => s + d.horas, 0);
+  const h3d = horasData.filter(d => d.tipo === '3D').reduce((s, d) => s + d.horas, 0);
+  const hFab = horasData.filter(d => d.tipo === 'Fabricación').reduce((s, d) => s + d.horas, 0);
+  document.getElementById('r-gastos').textContent = fmt(gTotal);
+  document.getElementById('r-horas').textContent = fmt(hTotal);
+  document.getElementById('r-total').textContent = fmt(gTotal + hTotal);
+  document.getElementById('r-gpagado').textContent = fmt(gPagado);
+  document.getElementById('r-gpendiente').textContent = fmt(gTotal - gPagado);
+  document.getElementById('r-hpendiente').textContent = fmt(hPendiente);
+  document.getElementById('r-h-web').textContent = hWeb.toFixed(1) + 'h';
+  document.getElementById('r-h-3d').textContent = h3d.toFixed(1) + 'h';
+  document.getElementById('r-h-fab').textContent = hFab.toFixed(1) + 'h';
+}
+
+// ── MODAL ──
+
+function openAddModal(type) {
+  editingType = null; editingIndex = -1; currentModalType = type;
+  document.getElementById('modal-add').classList.add('active');
+  document.getElementById('form-gasto').style.display = type === 'gasto' ? 'block' : 'none';
+  document.getElementById('form-hora').style.display = type === 'hora' ? 'block' : 'none';
+  document.getElementById('modal-title').textContent = type === 'gasto' ? 'Añadir gasto' : 'Añadir hora de trabajo';
+  const today = new Date().toISOString().slice(0,10);
+  if (type === 'gasto') {
+    ['add-fecha','add-concepto','add-importe','add-proveedor','add-factura'].forEach(id => { const el = document.getElementById(id); if (el.tagName === 'INPUT' && el.type !== 'date') el.value = ''; });
+    document.getElementById('add-fecha').value = today;
+    document.getElementById('add-categoria').selectedIndex = 0;
+    document.getElementById('add-estado-g').selectedIndex = 0;
+  } else {
+    document.getElementById('add-h-fecha').value = today;
+    document.getElementById('add-h-tipo').selectedIndex = 0;
+    document.getElementById('add-h-tarea').value = '';
+    document.getElementById('add-h-horas').value = '1';
+    document.getElementById('add-h-tarifa').value = '25';
+    document.getElementById('add-h-estado').selectedIndex = 0;
+  }
+}
+
+function openEditModal(type, index) {
+  editingType = type; editingIndex = index; currentModalType = type;
+  document.getElementById('modal-add').classList.add('active');
+  document.getElementById('form-gasto').style.display = type === 'gasto' ? 'block' : 'none';
+  document.getElementById('form-hora').style.display = type === 'hora' ? 'block' : 'none';
+  document.getElementById('modal-title').textContent = type === 'gasto' ? 'Editar gasto' : 'Editar hora de trabajo';
+  if (type === 'gasto') {
+    const d = gastosData[index];
+    document.getElementById('add-fecha').value = d.fecha;
+    document.getElementById('add-concepto').value = d.concepto;
+    document.getElementById('add-importe').value = d.importe;
+    document.getElementById('add-categoria').value = d.categoria;
+    document.getElementById('add-proveedor').value = d.proveedor;
+    document.getElementById('add-estado-g').value = d.estado;
+    document.getElementById('add-factura').value = d.factura;
+  } else {
+    const d = horasData[index];
+    document.getElementById('add-h-fecha').value = d.fecha;
+    document.getElementById('add-h-tipo').value = d.tipo;
+    document.getElementById('add-h-tarea').value = d.tarea;
+    document.getElementById('add-h-horas').value = d.horas;
+    document.getElementById('add-h-tarifa').value = d.tarifa;
+    document.getElementById('add-h-estado').value = d.estado;
+  }
+}
+
+function closeAddModal() {
+  document.getElementById('modal-add').classList.remove('active');
+  editingType = null; editingIndex = -1;
+}
+
+function addEntry() {
+  if (editingType === 'gasto') editingIndex >= 0 ? saveEditGasto() : addGasto();
+  else editingIndex >= 0 ? saveEditHora() : addHora();
+}
+
+function editGasto(idx) { openEditModal('gasto', idx); }
+function editHora(idx) { openEditModal('hora', idx); }
+
+function deleteGasto(idx) {
+  if (!confirm('¿Borrar "' + gastosData[idx].concepto + '"?')) return;
+  gastosData.splice(idx, 1);
+  persist();
+  applyGastosFilters();
+  renderSummary();
+}
+
+function deleteHora(idx) {
+  if (!confirm('¿Borrar "' + horasData[idx].tarea + '"?')) return;
+  horasData.splice(idx, 1);
+  persist();
+  applyHorasFilters();
+  renderSummary();
+}
+
+function saveEditGasto() {
+  const d = gastosData[editingIndex];
+  d.fecha = document.getElementById('add-fecha').value;
+  d.concepto = document.getElementById('add-concepto').value.trim();
+  d.importe = parseFloat(document.getElementById('add-importe').value.replace(',','.')) || 0;
+  d.categoria = document.getElementById('add-categoria').value;
+  d.proveedor = document.getElementById('add-proveedor').value.trim();
+  d.estado = document.getElementById('add-estado-g').value;
+  d.factura = document.getElementById('add-factura').value.trim();
+  if (!d.concepto) { alert('Introduce un concepto'); return; }
+  persist();
+  applyGastosFilters();
+  closeAddModal();
+}
+
+function saveEditHora() {
+  const d = horasData[editingIndex];
+  d.fecha = document.getElementById('add-h-fecha').value;
+  d.tipo = document.getElementById('add-h-tipo').value;
+  d.tarea = document.getElementById('add-h-tarea').value.trim();
+  d.horas = parseFloat(document.getElementById('add-h-horas').value) || 0;
+  d.tarifa = parseFloat(document.getElementById('add-h-tarifa').value) || 25;
+  d.total = d.horas * d.tarifa;
+  d.estado = document.getElementById('add-h-estado').value;
+  if (!d.tarea) { alert('Introduce una tarea'); return; }
+  persist();
+  applyHorasFilters();
+  renderSummary();
+  closeAddModal();
+}
+
+function addGasto() {
+  const fecha = document.getElementById('add-fecha').value;
+  const concepto = document.getElementById('add-concepto').value.trim();
+  const importe = parseFloat(document.getElementById('add-importe').value.replace(',','.')) || 0;
+  const categoria = document.getElementById('add-categoria').value;
+  const proveedor = document.getElementById('add-proveedor').value.trim();
+  const estado = document.getElementById('add-estado-g').value;
+  const factura = document.getElementById('add-factura').value.trim();
+  if (!concepto || !importe) { alert('Introduce concepto e importe válido'); return; }
+  gastosData.push({ fecha, concepto, importe, categoria, proveedor, estado, factura });
+  persist();
+  applyGastosFilters();
+  closeAddModal();
+}
+
+function addHora() {
+  const fecha = document.getElementById('add-h-fecha').value;
+  const tipo = document.getElementById('add-h-tipo').value;
+  const tarea = document.getElementById('add-h-tarea').value.trim();
+  const horas = parseFloat(document.getElementById('add-h-horas').value) || 0;
+  const tarifa = parseFloat(document.getElementById('add-h-tarifa').value) || 25;
+  if (!tarea || horas <= 0) { alert('Introduce tarea y horas válidas'); return; }
+  horasData.push({ fecha, tipo, tarea, horas, tarifa, total: horas * tarifa, estado: document.getElementById('add-h-estado').value });
+  persist();
+  applyHorasFilters();
+  renderSummary();
+  closeAddModal();
+}
+
+function exportAll() {
+  downloadBlob('gastos.csv', toCSV('gasto'));
+  setTimeout(() => downloadBlob('horas.csv', toCSV('hora')), 300);
+}
+
+function downloadBlob(filename, content) {
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+loadAll();
+</script>
+</body>
+</html>
